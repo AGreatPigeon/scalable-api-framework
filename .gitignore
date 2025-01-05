@@ -141,3 +141,4 @@ replay_pid*
 /.idea/modules.xml
 /.idea/scalable-api-framework.iml
 /.idea/vcs.xml
+/target/
