@@ -1,4 +1,4 @@
-# Scalable API Framework with Spring Boot, Redis, and AWS Lambda
+ # Scalable API Framework with Spring Boot, Redis, and AWS Lambda
 
 ## Project Overview
 This project demonstrates a scalable and high-performance REST API built with **Spring Boot**, **AWS Lambda**, **DynamoDB**, and **Redis Pub/Sub**. It handles real-time messaging and processes over 1M+ requests daily with efficient integration of microservices and cloud-based components.
@@ -142,16 +142,6 @@ Observe the subscriber logs for real-time updates.
 - Implement **WebSocket** for real-time client notifications.
 - Add **JWT-based authentication** for secure API access.
 - Scale Redis with **AWS ElastiCache**.
-
----
-
-## License
-This project is licensed under the MIT License. See `LICENSE` for details.
-
----
-
-## Contributing
-Contributions are welcome! Please fork the repository and submit a pull request.
 
 ---
 
