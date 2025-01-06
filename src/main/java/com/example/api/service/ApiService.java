@@ -12,6 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import com.example.api.model.ApiRequest;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 
 import java.net.URI;
 
@@ -34,16 +35,8 @@ public class ApiService {
     @Value("${aws.region}")
     private String awsRegion;
 
-    private final DynamoDbEnhancedClient enhancedClient;
-
     public ApiService(DynamoDbClient dynamoDbClient){
-        this.dynamoDbClient = DynamoDbClient.builder().
-                region(Region.US_EAST_1)
-                .endpointOverride(URI.create("http://localhost:8000"))
-                .build();
-        this.enhancedClient = DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(dynamoDbClient)
-                .build();
+        this.dynamoDbClient = dynamoDbClient;
     }
 
     public ApiRequest getRequest(String requestId){
@@ -61,24 +54,32 @@ public class ApiService {
     }
 
     private ApiRequest fetchFromDynamoDb(String requestId){
+        DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(dynamoDbClient)
+                .build();
         DynamoDbTable<ApiRequest> mappedTable = enhancedClient.table(tableName, TableSchema.fromBean(ApiRequest.class));
-        return mappedTable.getItem(r -> r.key(k -> k.partitionValue(requestId)));
+        try{
+            ApiRequest response = mappedTable.getItem(r -> r.key(k -> k.partitionValue(requestId)));
+            if (response == null){
+                // Log that the item wasn't found
+                System.err.println("No item found in DynamoDB for ID: " + requestId);
+                return null;
+            }
+            return response;
+        } catch (Exception e){
+            // Log the exception and rethrow or handle it
+            System.err.println("Error fetching item from DynamoDB: " + e.getMessage());
+            throw e; // or return a default value
+        }
     }
 
     public void saveRequest(ApiRequest apiRequest) {
+        DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(dynamoDbClient)
+                .build();
         DynamoDbTable<ApiRequest> mappedTable = enhancedClient.table(tableName, TableSchema.fromBean(ApiRequest.class));
         mappedTable.putItem(apiRequest);
 
         redisTemplate.opsForValue().set(apiRequest.getId(), apiRequest);
-    }
-
-    // Ensure DynamoDbClient is properly configured with endpoint and region
-    @PostConstruct
-    public void setupDynamoDbClient() {
-        // Use endpoint and region from configuration properties
-        this.dynamoDbClient = DynamoDbClient.builder()
-                .endpointOverride(URI.create(dynamoDbEndpoint))
-                .region(Region.of(awsRegion))  // Dynamically set region from properties
-                .build();
     }
 }
