@@ -6,11 +6,10 @@ This project demonstrates a scalable and high-performance REST API built with **
 ---
 
 ## Features
-- **Spring Boot Framework**: Simplifies development with robust tools for dependency injection, API handling, and AWS integration.
-- **Redis Pub/Sub**: Implements real-time messaging for event notifications and distributed communication.
-- **AWS Lambda**: Serverless architecture for cost-effective, scalable compute services.
-- **DynamoDB Integration**: Low-latency and highly scalable NoSQL database.
-- **Real-Time Notifications**: Enables real-time data updates and notifications using Redis channels.
+- **Spring Boot Framework**: Simplifies development with robust tools for dependency injection and API handling.
+- **Redis for Caching**: Enhances performance by reducing database calls.
+- **AWS DynamoDB**: Provides a low-latency and highly scalable NoSQL database.
+- **Scalable Architecture**: Designed to support high-throughput traffic and scalability.
 
 ---
 
@@ -20,12 +19,10 @@ This project demonstrates a scalable and high-performance REST API built with **
 - **Java 17** or higher
 - **Maven** (for dependency management)
 - **Redis** (locally or via a cloud provider like AWS ElastiCache)
-- **AWS CLI** (for deploying Lambda functions)
+- **AWS CLI** (for DynamoDB access)
 
 ### AWS Services Required
 - **AWS DynamoDB**: For data storage.
-- **AWS Lambda**: For serverless compute.
-- **AWS API Gateway**: For managing API endpoints.
 
 ---
 
@@ -61,33 +58,26 @@ mvn clean package
 
 ## Key Components
 
-### 1. **Redis Publisher**
-Located in `RedisPublisherService.java`, this service publishes messages to Redis channels:
+### 1. **Caching with Redis**
+The application uses Redis for caching to enhance performance and reduce DynamoDB latency. Caching logic is implemented in RedisCacheService.java:
 ```java
 @Autowired
-private StringRedisTemplate redisTemplate;
+private RedisTemplate<String, Object> redisTemplate;
 
-public void publishMessage(String channel, String message) {
-    redisTemplate.convertAndSend(channel, message);
+public void saveToCache(String key, Object value) {
+    redisTemplate.opsForValue().set(key, value, Duration.ofMinutes(10));
 }
 ```
 
-### 2. **Redis Subscriber**
-Located in `RedisSubscriberService.java`, this service listens for messages from Redis channels:
+### 2. **DynamoDB Integration**
+CRUD operations are implemented using the AWS SDK. The service interacts with DynamoDB in DynamoDBService.java:
 ```java
-@Bean
-public RedisMessageListenerContainer listenerContainer(RedisMessageListenerAdapter listenerAdapter) {
-    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-    container.addMessageListener(listenerAdapter, new ChannelTopic("data-updates"));
-    return container;
-}
-```
+@Autowired
+private DynamoDbClient dynamoDbClient;
 
-### 3. **AWS Lambda Integration**
-The application integrates with AWS Lambda using Spring Boot and the `SpringBootRequestHandler` class:
-```java
-public class LambdaHandler extends SpringBootRequestHandler<Object, Object> {}
-```
+public void saveItem(String tableName, Map<String, AttributeValue> item) {
+    dynamoDbClient.putItem(PutItemRequest.builder().tableName(tableName).item(item).build());
+}
 
 ---
 
@@ -99,17 +89,15 @@ Build a JAR file suitable for deployment:
 mvn clean package
 ```
 
-### 2. Deploy to AWS Lambda
-1. Create an AWS Lambda function.
-2. Upload the JAR file as the Lambda function package.
-3. Configure the function handler as:
-   ```java
-   com.example.api.LambdaHandler
+### 2. Deploy on a Server
+1. Transfer the JAR file to your server.
+2. Run the application:
+   ```bash
+   java -jar scalable-api-framework.jar
    ```
 
-### 3. Set Up API Gateway
-1. Create an API Gateway in AWS.
-2. Link it to the Lambda function to expose the REST API.
+### 3. Configure AWS and Redis
+1. Ensure that the server can connect to your AWS DynamoDB instance and Redis cache.
 
 ---
 
@@ -127,21 +115,26 @@ curl -X POST http://localhost:8080/api/save \
   -d '{"id":"123", "payload":"Test data"}'
 ```
 
-### 2. Redis Messaging
-Publish a message:
+### 2. Caching with Redis
+Set a value in the cache:
 ```bash
-curl -X POST http://localhost:8080/api/publish \
+curl -X POST http://localhost:8080/api/cache \
   -H "Content-Type: application/json" \
-  -d '{"channel":"data-updates", "message":"New data added!"}'
+  -d '{"key":"exampleKey", "value":"exampleValue"}'
 ```
-Observe the subscriber logs for real-time updates.
+
+Retrieve the cached value:
+```bash
+curl -X GET http://localhost:8080/api/cache/exampleKey
+```
 
 ---
 
 ## Future Improvements
 - Implement **WebSocket** for real-time client notifications.
 - Add **JWT-based authentication** for secure API access.
-- Scale Redis with **AWS ElastiCache**.
+- Scale Redis with **AWS ElastiCache** for distributed caching.
+- Integrate AWS Lambda for serverless compute operations.
 
 ---
 

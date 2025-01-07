@@ -141,3 +141,8 @@ replay_pid*
 /.idea/modules.xml
 /.idea/scalable-api-framework.iml
 /.idea/vcs.xml
+/target/
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/encodings.xml
+.vscode/settings.json
