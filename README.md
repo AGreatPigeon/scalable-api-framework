@@ -78,7 +78,7 @@ private DynamoDbClient dynamoDbClient;
 public void saveItem(String tableName, Map<String, AttributeValue> item) {
     dynamoDbClient.putItem(PutItemRequest.builder().tableName(tableName).item(item).build());
 }
-
+```
 ---
 
 ## Deployment
