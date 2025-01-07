@@ -5,27 +5,14 @@ import com.example.api.config.TestRedisConfiguration;
 import com.example.api.model.ApiRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.testcontainers.containers.localstack.LocalStackContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
-
-import java.util.Map;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,6 +31,9 @@ class ApiServiceTest {
 
     @Autowired
     private ApiService apiService;
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private static final String TEST_REQUEST_ID = "123";
     private static final String TEST_PAYLOAD = "Test Request";
@@ -107,6 +97,12 @@ class ApiServiceTest {
         ApiRequest savedInCache = (ApiRequest) redisTemplate.opsForValue().get(TEST_REQUEST_ID);
         assertNotNull(savedInCache, "The request should be cached in Redis.");
         assertEquals(TEST_PAYLOAD, savedInCache.getPayload(), "The cached payload should match the saved request.");
+    }
+
+    @Test
+    void testKafkaProducer() {
+        kafkaTemplate.send("api-requests", "123", "Test Payload");
+        // Verify using a mock Kafka consumer or inspect logs
     }
 
 }

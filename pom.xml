@@ -11,14 +11,14 @@
     <packaging>jar</packaging>
 
     <name>Scalable API Framework</name>
-    <description>High-performance API with Spring Boot, AWS Lambda, DynamoDB, and Redis</description>
+    <description>High-performance API with Spring Boot, Kafka, AWS Lambda, DynamoDB, and Redis</description>
 
     <properties>
         <java.version>23</java.version>
-        <spring-boot.version>3.3.0</spring-boot.version>
-        <aws-sdk.version>2.20.160</aws-sdk.version>
+        <spring-boot.version>3.4.1</spring-boot.version>
+        <aws-sdk.version>2.29.46</aws-sdk.version>
         <lettuce.version>6.5.2.RELEASE</lettuce.version>
-        <junit-jupiter.version>5.10.0</junit-jupiter.version>
+        <junit-jupiter.version>5.11.4</junit-jupiter.version>
     </properties>
 
     <dependencies>
@@ -58,9 +58,15 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>3.3.1</version> 
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j2-impl</artifactId>
-            <version>2.24.3</version> <!-- Add version -->
+            <version>2.24.3</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
@@ -70,7 +76,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Spring Boot Test Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -133,27 +138,27 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.15.0</version> <!-- Or the version that matches your Spring Boot version -->
+            <version>2.18.2</version>
         </dependency>
 
         <!-- Jackson Annotations -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.15.0</version> <!-- Ensure compatibility with other Jackson libraries -->
+            <version>2.18.2</version>
         </dependency>
 
         <!-- Jackson Core -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.15.0</version> <!-- Ensure compatibility -->
+            <version>2.18.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
-            <version>2.12.0</version>  <!-- Ensure this version matches the one compatible with your Lettuce version -->
+            <version>2.12.0</version>
         </dependency>
 
     </dependencies>
@@ -178,4 +183,28 @@
             </plugin>
         </plugins>
     </build>
+
+
+    <dependencyManagement>
+    
+
+        <dependencies>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>6.2.0</version>
+            </dependency>
+
+        
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>6.2.0</version>
+            </dependency>
+
+        </dependencies>
+
+    </dependencyManagement>
 </project>

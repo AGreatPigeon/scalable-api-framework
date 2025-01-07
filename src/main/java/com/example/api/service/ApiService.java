@@ -1,20 +1,16 @@
 package com.example.api.service;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.data.redis.core.RedisTemplate;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import com.example.api.model.ApiRequest;
-import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
-
-import java.net.URI;
 
 @Service
 @PropertySource("classpath:application.properties")
@@ -35,8 +31,14 @@ public class ApiService {
     @Value("${aws.region}")
     private String awsRegion;
 
-    public ApiService(DynamoDbClient dynamoDbClient){
+    @Value("${kafka.topic}")
+    private String topic;
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public ApiService(DynamoDbClient dynamoDbClient, KafkaTemplate<String, String> kafkaTemplate){
         this.dynamoDbClient = dynamoDbClient;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public ApiRequest getRequest(String requestId){
@@ -69,7 +71,7 @@ public class ApiService {
         } catch (Exception e){
             // Log the exception and rethrow or handle it
             System.err.println("Error fetching item from DynamoDB: " + e.getMessage());
-            throw e; // or return a default value
+            throw e;
         }
     }
 
@@ -80,6 +82,7 @@ public class ApiService {
         DynamoDbTable<ApiRequest> mappedTable = enhancedClient.table(tableName, TableSchema.fromBean(ApiRequest.class));
         mappedTable.putItem(apiRequest);
 
+        kafkaTemplate.send(topic, apiRequest.getId(), apiRequest.getPayload());
         redisTemplate.opsForValue().set(apiRequest.getId(), apiRequest);
     }
 }
